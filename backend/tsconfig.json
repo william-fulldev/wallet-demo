@@ -1,0 +1,34 @@
+{
+    "compilerOptions": {
+    // Versión de JavaScript que generará el compilador.
+    // ES2022 es la versión moderna y Node.js la entiende sin problemas.
+    "target": "ES2022",
+
+    // Sistema de módulos y forma de resolver los imports.
+    // "nodenext" sigue las reglas actuales de Node.js.
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+
+    // Carpeta donde estará el código (entrada) y donde se generará el resultado (salida).
+    "rootDir": "src",
+    "outDir": "dist",
+
+    // Modo estricto: activa todas las comprobaciones de seguridad de tipos.
+    "strict": true,
+
+    // Permite escribir "import express from 'express'" de forma natural.
+    "esModuleInterop": true,
+
+    // No revisa los tipos internos de las librerías (más rápido, menos ruido).
+    "skipLibCheck": true,
+
+    // Obliga a que los nombres de archivo coincidan en mayúsculas/minúsculas.
+    "forceConsistentCasingInFileNames": true,
+
+    // Indico que quiero usar los tipos de Node.js para .env, process, etc.
+    "types": ["node"],
+    },
+
+    // Solo compila lo que esté dentro de src.
+    "include": ["src"]
+}

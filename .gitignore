@@ -1,0 +1,21 @@
+# Aquí escribo lo que NO quiero subir a GitHub.
+
+# Dependencias: las puedo reinstalar con "npm install", así que no las guardo.
+node_modules/
+
+# Código compilado: lo regenero con "npm run build" cuando lo necesito.
+dist/
+
+# Secretos locales: aquí estarán mi cadena de MongoDB y mis claves.
+.env
+.env.*
+
+# Excepción: la plantilla .env.example sí la subo, porque no contiene valores reales.
+!.env.example
+
+# Registros de errores que genera mi propio ordenador.
+*.log
+
+# Archivos que crea el sistema operativo y que no aportan nada al proyecto.
+.DS_Store
+Thumbs.db
