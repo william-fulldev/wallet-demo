@@ -3,6 +3,13 @@ import * as z from "zod";
 // Uso el mismo tope de bytes que mi función de hash, para que ambas reglas coincidan.
 const MAX_PASSWORD_BYTES = 72;
 
+// Una sola definición del correo para registro, login y contactos.
+export const emailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .pipe(z.email({ error: "El correo no tiene un formato válido." }));
+
 // Describo exactamente qué datos acepto para registrar a un usuario.
 // "strictObject" rechaza campos que yo no he previsto, en lugar de ignorarlos en silencio.
 export const registerSchema = z.strictObject({
@@ -13,12 +20,7 @@ export const registerSchema = z.strictObject({
     .min(2, "El nombre debe tener al menos 2 caracteres.")
     .max(80, "El nombre no puede superar los 80 caracteres."),
 
-  // Primero normalizo el texto y después compruebo que parezca un correo.
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .pipe(z.email({ error: "El correo no tiene un formato válido." })),
+  email: emailSchema,
 
   // No recorto la contraseña: los espacios podrían formar parte de ella.
   password: z
@@ -40,12 +42,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 
 // Defino qué datos acepto para iniciar sesión.
 export const loginSchema = z.strictObject({
-  // registrado como "ana@x.com" no podría entrar escribiendo "Ana@x.com".
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .pipe(z.email({ error: "El correo no tiene un formato válido." })),
+  email: emailSchema,
 
   // En login solo exijo que la contraseña exista y no sea absurdamente larga.
   password: z

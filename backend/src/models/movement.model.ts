@@ -2,8 +2,16 @@ import { Schema, model } from "mongoose";
 import { CURRENCIES } from "./account.model.js";
 import { validate } from "zod";
 
-// Defino los tipos de movimiento que admito. Empiezo solo con los ingresos simulados.
-export const MOVEMENT_TYPES = ["deposit", "exchange_out", "exchange_in"] as const;
+export const MOVEMENT_TYPES = [
+    "deposit",
+    "exchange_out",
+    "exchange_in",
+    "transfer_out",
+    "transfer_in",
+    "investment_buy",
+    "investment_sell",
+    "payment_out",
+] as const;
 export type MovementType = (typeof MOVEMENT_TYPES)[number];
 
 // Defino los campos de cada apunte del libro de movimientos.
@@ -70,6 +78,20 @@ const movementSchema = new Schema(
         rateFromUnits: { type: Number, min: 1, validate: { validator: Number.isSafeInteger } },
         rateToUnits: { type: Number, min: 1, validate: { validator: Number.isSafeInteger } },
 
+        // Solo las transferencias rellenan estos campos.
+        transferId: { type: Schema.Types.ObjectId },
+        counterparty: { type: Schema.Types.ObjectId, ref: "User" },
+        note: { type: String, maxlength: 140 },
+
+        // Solo las compras de inversión rellenan estos campos.
+        tradeId: { type: Schema.Types.ObjectId, ref: "Trade" },
+        asset: {
+            symbol: { type: String, trim: true },
+            name: { type: String, trim: true },
+        },
+
+        // Solo los gastos/pagos de ejemplo rellenan este campo.
+        merchantKey: { type: String, trim: true },
     },
     {
         // Un apunte no se modifica nunca, así que solo guardo cuándo se creó.
@@ -79,6 +101,12 @@ const movementSchema = new Schema(
 
 // Acelero la consulta más habitual: el historial de un usuario, del más reciente al más antiguo.
 movementSchema.index({ user: 1, _id: -1 });
+
+// Para localizar el apunte de un envío al repetirlo.
+movementSchema.index({ transferId: 1 }, { sparse: true });
+
+// Para localizar el apunte de una compra de inversión.
+movementSchema.index({ tradeId: 1 }, { sparse: true });
 
 // Creo y exporto el modelo con el que trabajaré los movimientos.
 export const Movement = model("Movement", movementSchema);

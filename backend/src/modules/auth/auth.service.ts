@@ -3,6 +3,10 @@ import { ensureAccounts } from "../accounts/accounts.service.js";
 import { User } from "../../models/user.model.js";
 import { hashPassword, verifyPassword } from "../../utils/password.js";
 import type { LoginInput, RegisterInput } from "./auth.schemas.js";
+import { isDuplicateKeyError } from "../../utils/mongo-errors.js";
+import { env } from "../../config/env.js";
+import { ensureDemoContacts, seedDemoActivity } from "../demo/demo.service.js";
+
 
 
 
@@ -22,7 +26,28 @@ export type PublicUser = {
     name: string;
     email: string;
     createdAt: Date;
+    avatarId: string | null;
 };
+
+type UserSource = {
+    id: string;
+    name: string;
+    email: string;
+    createdAt: Date;
+    avatarId?: string | null | undefined;
+};
+
+// Elijo los campos a mano: así ningún dato interno sale por accidente.
+function toPublicUser(user: UserSource): PublicUser {
+    return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        // Los usuarios anteriores a este campo no lo tienen: lo trato como "sin avatar".
+        avatarId: user.avatarId ?? null,
+    };
+}
 
 // Preparo un hash falso al arrancar, para poder comparar aunque el usuario no exista.
 // Así el login tarda casi lo mismo con un correo real que con uno inventado.
@@ -45,15 +70,6 @@ export class UserNotFoundError extends Error {
     }
 }
 
-// Detecto el error que lanza MongoDB cuando se rompe un índice único (código 11000).
-function isDuplicateKeyError(error: unknown): boolean {
-    return (
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        error.code === 11000
-    );
-}
 
 // Registro a un usuario nuevo y le creo sus cuentas, todo o nada.
 export async function registerUser(input: RegisterInput): Promise<PublicUser> {
@@ -73,12 +89,7 @@ export async function registerUser(input: RegisterInput): Promise<PublicUser> {
             // Las cuentas se crean en la misma transacción que el usuario.
             await ensureAccounts(user.id, session);
 
-            result = {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                createdAt: user.createdAt,
-            };
+            result = toPublicUser(user);
         });
     } catch (error) {
         // Si el correo ya existía, lo convierto en mi error propio.
@@ -93,6 +104,15 @@ export async function registerUser(input: RegisterInput): Promise<PublicUser> {
 
     if (!result) {
         throw new Error("La transacción terminó sin resultado.");
+    }
+
+    if (env.DEMO_MODE) {
+        try {
+            await ensureDemoContacts(result.id);
+            await seedDemoActivity(result.id);
+        } catch (error) {
+            console.error("Error al asignar contactos o actividad demo en registro:", error);
+        }
     }
 
     return result;
@@ -112,13 +132,7 @@ export async function loginUser(input: LoginInput): Promise<PublicUser> {
         throw new InvalidCredentialsError();
     }
 
-    // Devuelvo solo los campos públicos, igual que en el registro.
-    return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-    };
+    return toPublicUser(user);
 }
 
 // Busco al usuario que identifica un token ya verificado.
@@ -130,10 +144,6 @@ export async function getUserById(userId: string): Promise<PublicUser> {
         throw new UserNotFoundError();
     }
 
-    return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-    };
+    return toPublicUser(user);
 }
+

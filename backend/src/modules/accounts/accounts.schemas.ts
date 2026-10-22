@@ -2,7 +2,7 @@ import * as z from "zod";
 import { CURRENCIES } from "../../models/account.model.js";
 
 // Valido una moneda: la normalizo y compruebo que esté entre las admitidas.
-const currencySchema = z
+export const currencySchema = z
     .string()
     .trim()
     .toUpperCase()

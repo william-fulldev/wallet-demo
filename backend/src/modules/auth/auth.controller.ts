@@ -4,7 +4,7 @@ import { loginSchema, refreshBodySchema, registerSchema } from "./auth.schemas.j
 import { signAccessToken } from "../../utils/token.js";
 import { EmailAlreadyRegisteredError, InvalidCredentialsError, UserNotFoundError, getUserById, loginUser, registerUser } from "./auth.service.js";
 import { InvalidRefreshTokenError, revokeSession, rotateRefreshToken, startSession } from "../accounts/refresh-tokens.service.js";
-import { getAuthenticatedUserId } from "../accounts/auth-context.js";
+import { getAuthenticatedUserId } from "../../utils/auth-context.js";
 
 // Atiendo la petición de registro: valido, creo el usuario y respondo.
 export async function register(req: Request, res: Response): Promise<void> {
@@ -76,7 +76,6 @@ export async function login(req: Request, res: Response): Promise<void> {
     }
 }
 
-// Devuelvo los datos del usuario dueño del token. requireAuth ya verificó el token.
 export async function me(_req: Request, res: Response): Promise<void> {
     const userId = getAuthenticatedUserId(res);
 
@@ -89,7 +88,7 @@ export async function me(_req: Request, res: Response): Promise<void> {
         const user = await getUserById(userId);
         res.status(200).json({ user });
     } catch (error) {
-        // Si la cuenta ya no existe, el token deja de servir: respondo igual que sin autenticación.
+        // Si la cuenta ya no existe, el token deja de servir.
         if (error instanceof UserNotFoundError) {
             res.status(401).json({ message: "Autenticación requerida." });
             return;

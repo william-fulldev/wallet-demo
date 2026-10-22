@@ -81,3 +81,14 @@ export async function revokeSession(token: string): Promise<void> {
         await revokeFamily(known.familyId);
     }
 }
+
+// Revoca todas las sesiones activas (refresh tokens) de un usuario concreto.
+export async function revokeAllUserSessions(
+    userId: string | mongoose.Types.ObjectId,
+): Promise<number> {
+    const result = await RefreshToken.updateMany(
+        { user: userId, revokedAt: null },
+        { $set: { revokedAt: new Date() } },
+    );
+    return result.modifiedCount ?? 0;
+}

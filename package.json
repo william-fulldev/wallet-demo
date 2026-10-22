@@ -1,0 +1,16 @@
+{
+  "name": "wallet-demo-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Billetera multidivisa y plataforma de inversiones demo",
+  "scripts": {
+    "reset:demo": "npm --prefix backend run reset:demo --",
+    "seed:demo": "npm --prefix backend run seed:demo --",
+    "dev": "npm --prefix backend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix wallet-demo-app run dev",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix wallet-demo-app run build",
+    "test": "npm --prefix backend test"
+  }
+}

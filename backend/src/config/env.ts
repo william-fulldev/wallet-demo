@@ -63,6 +63,53 @@ if (refreshTokenDaysRaw) {
     }
 }
 
+// Leo los orígenes permitidos para CORS (separados por comas).
+const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:8100,http://localhost:5173")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+// Modalidad demo: inactiva por defecto.
+const demoModeRaw = process.env.DEMO_MODE?.trim().toLowerCase();
+let demoMode = false;
+if (demoModeRaw !== undefined && demoModeRaw !== "") {
+    if (demoModeRaw !== "true" && demoModeRaw !== "false") {
+        throw new Error("DEMO_MODE debe ser true o false.");
+    }
+    demoMode = demoModeRaw === "true";
+}
+
+// Interruptor para ingresos manuales: inactivo por defecto.
+const depositsEnabledRaw = process.env.DEPOSITS_ENABLED?.trim().toLowerCase();
+let depositsEnabled = false;
+if (depositsEnabledRaw !== undefined && depositsEnabledRaw !== "") {
+    if (depositsEnabledRaw !== "true" && depositsEnabledRaw !== "false") {
+        throw new Error("DEPOSITS_ENABLED debe ser true o false.");
+    }
+    depositsEnabled = depositsEnabledRaw === "true";
+}
+
+// Variable opcional heredada (se ignora sin error si está presente en el entorno).
+const demoPassword = process.env.DEMO_PASSWORD?.trim() || undefined;
+
+
+// Variables opcionales para los proveedores de mercado real.
+const finnhubApiKey = process.env.FINNHUB_API_KEY?.trim() || undefined;
+const coingeckoDemoApiKey = process.env.COINGECKO_DEMO_API_KEY?.trim() || undefined;
+
+// Caché de mercado: por defecto 60 segundos si no se especifica.
+const marketCacheTtlRaw = process.env.MARKET_CACHE_TTL_SECONDS?.trim();
+let marketCacheTtlSeconds = 60;
+if (marketCacheTtlRaw) {
+    if (!/^[0-9]+$/.test(marketCacheTtlRaw)) {
+        throw new Error("MARKET_CACHE_TTL_SECONDS debe contener únicamente dígitos.");
+    }
+    marketCacheTtlSeconds = Number(marketCacheTtlRaw);
+    if (!Number.isInteger(marketCacheTtlSeconds) || marketCacheTtlSeconds < 1) {
+        throw new Error("MARKET_CACHE_TTL_SECONDS debe ser un número entero mayor que 0.");
+    }
+}
+
 // Comparto los valores comprobados con el resto de mi backend.
 export const env = {
     nodeEnv,
@@ -70,4 +117,26 @@ export const env = {
     mongodbUri,
     jwtSecret,
     REFRESH_TOKEN_DAYS: refreshTokenDays,
+    corsOrigins,
+    CORS_ORIGINS: corsOrigins,
+    DEMO_MODE: demoMode,
+    demoMode,
+    get DEPOSITS_ENABLED(): boolean {
+        return depositsEnabled;
+    },
+    set DEPOSITS_ENABLED(value: boolean) {
+        depositsEnabled = value;
+    },
+    get depositsEnabled(): boolean {
+        return depositsEnabled;
+    },
+    set depositsEnabled(value: boolean) {
+        depositsEnabled = value;
+    },
+    DEMO_PASSWORD: demoPassword,
+    demoPassword,
+    FINNHUB_API_KEY: finnhubApiKey,
+    COINGECKO_DEMO_API_KEY: coingeckoDemoApiKey,
+    MARKET_CACHE_TTL_SECONDS: marketCacheTtlSeconds,
 };
+

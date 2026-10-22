@@ -1,21 +1,66 @@
-# Aquí escribo lo que NO quiero subir a GitHub.
-
-# Dependencias: las puedo reinstalar con "npm install", así que no las guardo.
+# Dependencias
 node_modules/
 
-# Código compilado: lo regenero con "npm run build" cuando lo necesito.
+# Código compilado
 dist/
 
-# Secretos locales: aquí estarán mi cadena de MongoDB y mis claves.
+# Archivos de entorno y credenciales locales
 .env
 .env.*
-
-# Excepción: la plantilla .env.example sí la subo, porque no contiene valores reales.
+.env*.local
 !.env.example
+!*.env.example
 
-# Registros de errores que genera mi propio ordenador.
+# Claves privadas, certificados y almacenes criptográficos
+*.pem
+*.key
+*.pkcs12
+*.p12
+*.pfx
+*.keystore
+*.jks
+*.cer
+*.crt
+*.der
+key.properties
+
+# Android y compilación móvil
+local.properties
+.gradle/
+captures/
+*.hprof
+.externalNativeBuild
+.cxx/
+google-services.json
+GoogleService-Info.plist
+
+# IDEs y editores
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.sublime-project
+*.sublime-workspace
+*.swp
+*~
+
+# Pruebas y cobertura
+coverage/
+.nyc_output/
+
+# Bases de datos y volcados locales
+*.sqlite
+*.sqlite3
+*.db
+dump/
+
+# Registros y logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Archivos que crea el sistema operativo y que no aportan nada al proyecto.
+# Archivos generados por el sistema operativo
 .DS_Store
 Thumbs.db
+Desktop.ini

@@ -8,6 +8,7 @@ import {
     movementsQuerySchema,
     exchangeBodySchema,
 } from "./accounts.schemas.js";
+import { env } from "../../config/env.js";
 import {
     AccountNotFoundError,
     AmountTooSmallError,
@@ -33,6 +34,14 @@ export async function getAccounts(_req: Request, res: Response): Promise<void> {
 
 // Hago un ingreso simulado en una de las cuentas del usuario autenticado.
 export async function deposit(req: Request, res: Response): Promise<void> {
+    if (!env.DEPOSITS_ENABLED) {
+        res.status(403).json({
+            code: "DEPOSITS_DISABLED",
+            message: "Los ingresos están desactivados en esta demo. Cada cuenta parte con 500 EUR, 500 USD y 500 BRL.",
+        });
+        return;
+    }
+
     const userId = getAuthenticatedUserId(res);
 
     if (!userId) {

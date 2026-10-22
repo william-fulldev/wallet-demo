@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 import { Account, CURRENCIES, type Currency } from "../../models/account.model.js";
 import { Movement } from "../../models/movement.model.js";
+import { User } from "../../models/user.model.js";
 import type { ClientSession } from "mongoose";
 import { convertCents } from "./exchange-rates.js";
 import { getRates, type RateSource } from "./rates.service.js";
 
 // Construyo una cuenta pública eligiendo los campos a mano.
-function toPublicAccount(account: PublicAccount): PublicAccount {
+export function toPublicAccount(account: PublicAccount): PublicAccount {
     return {
         id: account.id,
         currency: account.currency,
@@ -25,13 +26,23 @@ export type PublicAccount = {
 
 // Error propio para "esa cuenta no existe o no es del usuario".
 export class AccountNotFoundError extends Error {
-    constructor() {
-        super("Cuenta no encontrada.");
+    constructor(message = "Cuenta no encontrada.") {
+        super(message);
         this.name = "AccountNotFoundError";
     }
 }
 
-// Defino los únicos datos de un movimiento que puedo devolver al exterior.
+import { getMerchant, type PublicMerchant } from "../demo/merchants.js";
+
+export type PublicCounterparty = { name: string; avatarId: string | null };
+
+export type PublicAsset = {
+    symbol: string;
+    name: string;
+};
+
+export { type PublicMerchant } from "../demo/merchants.js";
+
 export type PublicMovement = {
     id: string;
     currency: string;
@@ -40,14 +51,37 @@ export type PublicMovement = {
     balanceAfterCents: number;
     createdAt: Date;
     exchangeId: string | null;
+    transferId: string | null;
+    counterparty: PublicCounterparty | null;
+    note: string | null;
+    asset: PublicAsset | null;
+    merchant: PublicMerchant | null;
 };
 
-// El documento trae el id del cambio como ObjectId opcional; el público lo expone como texto o null.
-type MovementSource = Omit<PublicMovement, "exchangeId"> & {
-    exchangeId?: { toString(): string } | null | undefined;
+type IdLike = { toString(): string } | null | undefined;
+
+type MovementSource = Omit<
+    PublicMovement,
+    "exchangeId" | "transferId" | "counterparty" | "note" | "asset" | "merchant"
+> & {
+    exchangeId?: IdLike;
+    transferId?: IdLike;
+    counterparty?: IdLike;
+    note?: string | null | undefined;
+    asset?: { symbol?: string | null | undefined; name?: string | null | undefined } | null | undefined;
+    merchantKey?: string | null | undefined;
 };
 
-function toPublicMovement(movement: MovementSource): PublicMovement {
+export function toPublicMovement(
+    movement: MovementSource,
+    counterparties: Map<string, PublicCounterparty> = new Map(),
+): PublicMovement {
+    const counterpartyId = movement.counterparty?.toString();
+    const asset = movement.asset && movement.asset.symbol && movement.asset.name
+        ? { symbol: movement.asset.symbol, name: movement.asset.name }
+        : null;
+    const merchant = movement.merchantKey ? getMerchant(movement.merchantKey) : null;
+
     return {
         id: movement.id,
         currency: movement.currency,
@@ -56,7 +90,30 @@ function toPublicMovement(movement: MovementSource): PublicMovement {
         balanceAfterCents: movement.balanceAfterCents,
         createdAt: movement.createdAt,
         exchangeId: movement.exchangeId ? movement.exchangeId.toString() : null,
+        transferId: movement.transferId ? movement.transferId.toString() : null,
+        // Si la cuenta de la contraparte ya no existe, la dejo en null en lugar de fallar.
+        counterparty: counterpartyId ? (counterparties.get(counterpartyId) ?? null) : null,
+        note: movement.note ? movement.note : null,
+        asset,
+        merchant,
     };
+}
+
+// Una sola consulta para los nombres de todas las contrapartes de una página.
+async function loadCounterparties(
+    movements: { counterparty?: IdLike }[],
+): Promise<Map<string, PublicCounterparty>> {
+    const ids = [
+        ...new Set(movements.flatMap((movement) => (movement.counterparty ? [movement.counterparty.toString()] : []))),
+    ];
+
+    if (ids.length === 0) {
+        return new Map();
+    }
+
+    const users = await User.find({ _id: { $in: ids } }).select("name avatarId");
+
+    return new Map(users.map((user) => [user.id, { name: user.name, avatarId: user.avatarId ?? null }]));
 }
 
 // Defino lo que devuelve un ingreso: la cuenta ya actualizada y el apunte creado.
@@ -103,7 +160,60 @@ export async function depositToAccount(
     userId: string,
     currency: Currency,
     amountCents: number,
+    options?: { session?: ClientSession; createdAt?: Date },
 ): Promise<DepositResult> {
+    const executeInSession = async (session: ClientSession) => {
+        // Sumo con $inc en una sola operación atómica, filtrando por dueño y moneda.
+        const account = await Account.findOneAndUpdate(
+            { user: userId, currency },
+            { $inc: { balanceCents: amountCents } },
+            { returnDocument: "after", session },
+        );
+
+        // Si no existe, lanzar el error cancela la transacción.
+        if (!account) {
+            throw new AccountNotFoundError();
+        }
+
+        const movementDoc: {
+            user: string;
+            account: mongoose.Types.ObjectId;
+            currency: Currency;
+            type: "deposit";
+            amountCents: number;
+            balanceAfterCents: number;
+            createdAt?: Date;
+        } = {
+            user: userId,
+            account: account._id,
+            currency,
+            type: "deposit",
+            amountCents,
+            balanceAfterCents: account.balanceCents,
+        };
+
+        if (options?.createdAt) {
+            movementDoc.createdAt = options.createdAt;
+        }
+
+        // Anoto el movimiento con el saldo que quedó tras sumar.
+        const [movement] = await Movement.create([movementDoc], { session });
+
+        return {
+            account: {
+                id: account.id,
+                currency: account.currency,
+                balanceCents: account.balanceCents,
+                updatedAt: account.updatedAt,
+            },
+            movement: toPublicMovement(movement),
+        };
+    };
+
+    if (options?.session) {
+        return executeInSession(options.session);
+    }
+
     const session = await mongoose.startSession();
 
     // Guardo el resultado fuera de la transacción, porque la función puede ejecutarse más de una vez.
@@ -111,42 +221,7 @@ export async function depositToAccount(
 
     try {
         await session.withTransaction(async () => {
-            // Sumo con $inc en una sola operación atómica, filtrando por dueño y moneda.
-            const account = await Account.findOneAndUpdate(
-                { user: userId, currency },
-                { $inc: { balanceCents: amountCents } },
-                { returnDocument: "after", session },
-            );
-
-            // Si no existe, lanzar el error cancela la transacción.
-            if (!account) {
-                throw new AccountNotFoundError();
-            }
-
-            // Anoto el movimiento con el saldo que quedó tras sumar.
-            const [movement] = await Movement.create(
-                [
-                    {
-                        user: userId,
-                        account: account._id,
-                        currency,
-                        type: "deposit",
-                        amountCents,
-                        balanceAfterCents: account.balanceCents,
-                    },
-                ],
-                { session },
-            );
-
-            result = {
-                account: {
-                    id: account.id,
-                    currency: account.currency,
-                    balanceCents: account.balanceCents,
-                    updatedAt: account.updatedAt,
-                },
-                movement: toPublicMovement(movement),
-            };
+            result = await executeInSession(session);
         });
     } finally {
         // Cierro siempre la sesión, haya ido bien o mal.
@@ -183,9 +258,10 @@ export async function listMovements(
 
     const hasMore = rows.length > options.limit;
     const page = hasMore ? rows.slice(0, options.limit) : rows;
+    const counterparties = await loadCounterparties(page);
 
     return {
-        movements: page.map(toPublicMovement),
+        movements: page.map((movement) => toPublicMovement(movement, counterparties)),
         nextBefore: hasMore ? (page[page.length - 1]?.id ?? null) : null,
     };
 }
