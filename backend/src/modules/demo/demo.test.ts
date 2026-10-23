@@ -24,12 +24,12 @@ describe("módulo demo", () => {
         env.DEMO_MODE = originalDemoMode;
     });
 
-    it("seedDemoUsers crea los 9 usuarios con los correos nuevos y sus contraseñas individuales, y cuentas a cero", async () => {
+    it("seedDemoUsers crea los 10 usuarios con los correos nuevos y sus contraseñas individuales, y cuentas a cero", async () => {
         const result = await seedDemoUsers();
 
         expect(result.usersCreated).toBe(DEMO_USERS.length);
         expect(result.usersExisting).toBe(0);
-        expect(DEMO_USERS).toHaveLength(9);
+        expect(DEMO_USERS).toHaveLength(10);
 
         for (const demo of DEMO_USERS) {
             const user = await User.findOne({ email: demo.email }).select("+passwordHash");
@@ -79,10 +79,12 @@ describe("módulo demo", () => {
         const user101 = DEMO_USERS.find((u) => u.demoNumber === 101)!;
         const user104 = DEMO_USERS.find((u) => u.demoNumber === 104)!;
         const user109 = DEMO_USERS.find((u) => u.demoNumber === 109)!;
+        const user110 = DEMO_USERS.find((u) => u.demoNumber === 110)!;
 
         expect(user101).toBeDefined();
         expect(user104).toBeDefined();
         expect(user109).toBeDefined();
+        expect(user110).toBeDefined();
 
         // 1. Login exitoso usuario 101 (Alana R.)
         const res101 = await request(app)
@@ -110,7 +112,15 @@ describe("módulo demo", () => {
         expect(res109.body.user.email).toBe("laura.demo@gmail.com");
         expect(res109.body.user.name).toBe("Laura B.");
 
-        // 4. Usuario 101 con la contraseña de otro usuario (User 102) recibe error 401
+        // 4. Login exitoso usuario 110 (Griffin A.)
+        const res110 = await request(app)
+            .post("/api/auth/login")
+            .send({ email: user110.email, password: demoPassword(user110) });
+        expect(res110.status).toBe(200);
+        expect(res110.body.user.email).toBe("griffin.demo@gmail.com");
+        expect(res110.body.user.name).toBe("Griffin A.");
+
+        // 5. Usuario 101 con la contraseña de otro usuario (User 102) recibe error 401
         const user102 = DEMO_USERS.find((u) => u.demoNumber === 102)!;
         const resCrossPassword = await request(app)
             .post("/api/auth/login")

@@ -29,6 +29,7 @@ export const LEGACY_DEMO_EMAILS: Readonly<Record<string, string>> = {
     gisel: "gisel.demo@wallet.demo",
     william: "william.demo@wallet.demo",
     laura: "laura.demo@wallet.demo",
+    griffin: "griffin.demo@wallet.demo",
 } as const;
 
 const RAW_DEMO_USERS = [
@@ -41,6 +42,7 @@ const RAW_DEMO_USERS = [
     { handle: "gisel", demoNumber: 107, avatarId: "avatar-07", name: "Gisel R." },
     { handle: "william", demoNumber: 108, avatarId: "avatar-08", name: "William S." },
     { handle: "laura", demoNumber: 109, avatarId: "avatar-09", name: "Laura B." },
+    { handle: "griffin", demoNumber: 110, avatarId: "avatar-10", name: "Griffin A." },
 ] as const;
 
 export const DEMO_USERS: readonly DemoUserDefinition[] = RAW_DEMO_USERS.map((u) => ({

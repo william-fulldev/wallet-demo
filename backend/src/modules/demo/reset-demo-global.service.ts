@@ -57,8 +57,8 @@ export type ResetDemoGlobalResult = {
  * Restablecimiento global y definitivo del estado de demostración.
  *
  * ALCANCE:
- * 1. Garantiza que los 9 usuarios canónicos de demostración existan con su
- *    nombre, avatar, correo (@gmail.com) y contraseña por defecto (Password101!...Password109!).
+ * 1. Garantiza que los 10 usuarios canónicos de demostración existan con su
+ *    nombre, avatar, correo (@gmail.com) y contraseña por defecto (Password101!...Password110!).
  * 2. Asegura que cada usuario tenga vinculados a los demás usuarios de demo como contactos.
  * 3. Ejecuta una transacción atómica que:
  *    - Elimina todas las posiciones de inversión (Holdings) -> Cartera vacía inicial.
@@ -76,7 +76,7 @@ export type ResetDemoGlobalResult = {
  *        totalizando 122,32 EUR de gastos en su historial.
  */
 export async function resetDemoGlobal(): Promise<ResetDemoGlobalResult> {
-    // 1. Sincronizar los 9 usuarios canónicos de la demo fuera de la transacción principal
+    // 1. Sincronizar los 10 usuarios canónicos de la demo fuera de la transacción principal
     let demoUsersRestored = 0;
 
     for (const demo of DEMO_USERS) {

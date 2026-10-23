@@ -45,9 +45,9 @@ async function seedLegacyDemoUsers(password: string = OLD_PASSWORD): Promise<Map
 }
 
 describe("migración de usuarios demo (migrateDemoUsers)", () => {
-    it("la simulación reporta los 9 usuarios listos pero no modifica ningún dato en la base", async () => {
+    it("la simulación reporta los 10 usuarios listos pero no modifica ningún dato en la base", async () => {
         const ids = await seedLegacyDemoUsers();
-        expect(ids.size).toBe(9);
+        expect(ids.size).toBe(DEMO_USERS.length);
 
         // Guardar hashes y correos antes de la simulación
         const usersBefore = await User.find().select("+passwordHash");
@@ -55,8 +55,8 @@ describe("migración de usuarios demo (migrateDemoUsers)", () => {
 
         const preview = await previewMigrateDemoUsers();
 
-        expect(preview.totalUsers).toBe(9);
-        expect(preview.migrated).toBe(9);
+        expect(preview.totalUsers).toBe(DEMO_USERS.length);
+        expect(preview.migrated).toBe(DEMO_USERS.length);
         expect(preview.alreadyMigrated).toBe(0);
         expect(preview.conflicts).toBe(0);
         expect(preview.notFound).toBe(0);
@@ -76,15 +76,17 @@ describe("migración de usuarios demo (migrateDemoUsers)", () => {
         }
     });
 
-    it("aplica la migración conservando _id, saldos, movimientos y contactos, revoca refresh tokens e incluye a Laura B.", async () => {
+    it("aplica la migración conservando _id, saldos, movimientos y contactos, revoca refresh tokens e incluye a Laura B. y Griffin A.", async () => {
         const ids = await seedLegacyDemoUsers();
         const alanaId = ids.get("alana")!;
         const kerolId = ids.get("kerol")!;
         const lauraId = ids.get("laura")!;
+        const griffinId = ids.get("griffin")!;
 
         expect(alanaId).toBeDefined();
         expect(kerolId).toBeDefined();
         expect(lauraId).toBeDefined();
+        expect(griffinId).toBeDefined();
 
         // 1. Crear un usuario ajeno que no es de demostración
         const outsider = await createTestUser("Usuario Ajeno");
@@ -139,7 +141,7 @@ describe("migración de usuarios demo (migrateDemoUsers)", () => {
         // 5. Ejecutar applyMigrateDemoUsers()
         const result = await applyMigrateDemoUsers();
 
-        expect(result.migrated).toBe(9);
+        expect(result.migrated).toBe(DEMO_USERS.length);
         expect(result.alreadyMigrated).toBe(0);
         expect(result.conflicts).toBe(0);
         expect(result.notFound).toBe(0);
@@ -169,6 +171,12 @@ describe("migración de usuarios demo (migrateDemoUsers)", () => {
         expect(lauraUser?.name).toBe("Laura B.");
         expect(lauraUser?.email).toBe("laura.demo@gmail.com");
         expect(await verifyPassword("Password109!", lauraUser!.passwordHash)).toBe(true);
+
+        // Verificación específica de Griffin A. (110)
+        const griffinUser = await User.findById(griffinId).select("+passwordHash");
+        expect(griffinUser?.name).toBe("Griffin A.");
+        expect(griffinUser?.email).toBe("griffin.demo@gmail.com");
+        expect(await verifyPassword("Password110!", griffinUser!.passwordHash)).toBe(true);
 
         // 7. Refresh token activo de Alana quedó revocado
         const activeTokensAfter = await RefreshToken.find({ user: alanaId, revokedAt: null });
@@ -201,7 +209,7 @@ describe("migración de usuarios demo (migrateDemoUsers)", () => {
 
         // Primera ejecución real
         const firstRun = await applyMigrateDemoUsers();
-        expect(firstRun.migrated).toBe(9);
+        expect(firstRun.migrated).toBe(DEMO_USERS.length);
 
         // Guardar hashes actuales
         const usersFirstRun = await User.find().select("+passwordHash");
@@ -210,7 +218,7 @@ describe("migración de usuarios demo (migrateDemoUsers)", () => {
         // Segunda ejecución real
         const secondRun = await applyMigrateDemoUsers();
         expect(secondRun.migrated).toBe(0);
-        expect(secondRun.alreadyMigrated).toBe(9);
+        expect(secondRun.alreadyMigrated).toBe(DEMO_USERS.length);
         expect(secondRun.conflicts).toBe(0);
 
         // Los hashes no se reescribieron
@@ -222,10 +230,10 @@ describe("migración de usuarios demo (migrateDemoUsers)", () => {
         // seed:demo posterior no crea ningún usuario nuevo
         const seedResult = await seedDemoUsers();
         expect(seedResult.usersCreated).toBe(0);
-        expect(seedResult.usersExisting).toBe(9);
+        expect(seedResult.usersExisting).toBe(DEMO_USERS.length);
 
         const totalUsers = await User.countDocuments();
-        expect(totalUsers).toBe(9);
+        expect(totalUsers).toBe(DEMO_USERS.length);
     });
 
     it("detecta conflicto si un usuario ajeno ya tiene el correo nuevo, no sobreescribe y Alana conserva correo y contraseña antiguos", async () => {
@@ -241,9 +249,9 @@ describe("migración de usuarios demo (migrateDemoUsers)", () => {
 
         const result = await applyMigrateDemoUsers();
 
-        // 1 conflicto (Alana), 8 migrados
+        // 1 conflicto (Alana), N-1 migrados
         expect(result.conflicts).toBe(1);
-        expect(result.migrated).toBe(8);
+        expect(result.migrated).toBe(DEMO_USERS.length - 1);
 
         const alanaItem = result.items.find((i) => i.handle === "alana");
         expect(alanaItem?.status).toBe("conflict");

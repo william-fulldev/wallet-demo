@@ -29,7 +29,7 @@ export type MigrateDemoUsersResult = {
 
 /**
  * Migra los usuarios de demostración a sus nuevos correos (@gmail.com)
- * y contraseñas individuales (Password101! ... Password109!).
+ * y contraseñas individuales (Password101! ... Password110!).
  *
  * REGLAS DE SEGURIDAD E INTEGRIDAD:
  * - Por defecto simula (!apply) y no modifica ningún dato en la base.

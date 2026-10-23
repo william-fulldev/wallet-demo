@@ -36,7 +36,7 @@ async function run() {
             console.log("  • 8 gastos de ejemplo en EUR (Netflix, Spotify, Starbucks, etc.).");
             console.log("  • Vaciado de cartera de inversiones (0 holdings) y 0 operaciones.");
             console.log("  • Eliminación de transferencias previas y restablecimiento de contactos.");
-            console.log("  • Restauración de credenciales predefinidas de los 9 usuarios demo.\n");
+            console.log("  • Restauración de credenciales predefinidas de los 10 usuarios demo.\n");
 
             const rl = readline.createInterface({ input, output });
             const answer = await rl.question(

@@ -15,7 +15,7 @@ describe("initialsOf", () => {
 });
 
 describe("avatarUrl", () => {
-  it.each(["avatar-01", "avatar-08", "avatar-09"])("devuelve una cadena no vacía para %s", (avatarId) => {
+  it.each(["avatar-01", "avatar-08", "avatar-09", "avatar-10"])("devuelve una cadena no vacía para %s", (avatarId) => {
     const url = avatarUrl(avatarId);
     expect(typeof url).toBe("string");
     expect(url?.length).toBeGreaterThan(0);

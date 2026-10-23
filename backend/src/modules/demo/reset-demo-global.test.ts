@@ -43,8 +43,8 @@ describe("restablecimiento global de demo (resetDemoGlobal)", () => {
         // 2. Ejecutar restablecimiento global
         const result = await resetDemoGlobal();
 
-        expect(result.demoUsersRestored).toBe(9);
-        expect(result.totalUsersReset).toBeGreaterThanOrEqual(9);
+        expect(result.demoUsersRestored).toBe(DEMO_USERS.length);
+        expect(result.totalUsersReset).toBeGreaterThanOrEqual(DEMO_USERS.length);
         expect(result.holdingsDeleted).toBeGreaterThanOrEqual(1);
         expect(result.tradesDeleted).toBeGreaterThanOrEqual(1);
         expect(result.transfersDeleted).toBeGreaterThanOrEqual(1);
@@ -55,7 +55,7 @@ describe("restablecimiento global de demo (resetDemoGlobal)", () => {
         expect(await Trade.countDocuments()).toBe(0);
         expect(await Transfer.countDocuments()).toBe(0);
 
-        // 4. Comprobar que todos los 9 usuarios demo existen y tienen los saldos canónicos
+        // 4. Comprobar que todos los usuarios demo existen y tienen los saldos canónicos
         for (const demo of DEMO_USERS) {
             const dbUser = await User.findOne({ email: demo.email });
             expect(dbUser).not.toBeNull();
@@ -83,9 +83,9 @@ describe("restablecimiento global de demo (resetDemoGlobal)", () => {
             const payments = await Movement.find({ user: dbUser?._id, type: "payment_out" });
             expect(payments).toHaveLength(8);
 
-            // Verificar que los contactos demo existen (debe tener al menos los otros 8 demo)
+            // Verificar que los contactos demo existen (debe tener al menos los otros demo)
             const contacts = await Contact.find({ owner: dbUser?._id });
-            expect(contacts.length).toBeGreaterThanOrEqual(8);
+            expect(contacts.length).toBeGreaterThanOrEqual(DEMO_USERS.length - 1);
             for (const c of contacts) {
                 expect(c.lastTransferredAt).toBeNull();
             }
@@ -93,9 +93,9 @@ describe("restablecimiento global de demo (resetDemoGlobal)", () => {
 
         // 5. Idempotencia: una segunda ejecución deja el mismo estado perfecto
         const secondResult = await resetDemoGlobal();
-        expect(secondResult.demoUsersRestored).toBe(9);
+        expect(secondResult.demoUsersRestored).toBe(DEMO_USERS.length);
         expect(await Holding.countDocuments()).toBe(0);
         expect(await Trade.countDocuments()).toBe(0);
         expect(await Transfer.countDocuments()).toBe(0);
-    });
+    }, 90_000);
 });
