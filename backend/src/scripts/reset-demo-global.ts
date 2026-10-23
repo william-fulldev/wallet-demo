@@ -72,7 +72,7 @@ async function run() {
         console.log(`• Gastos demo por usuario:        ${result.demoExpensesPerUser}`);
         console.log("-------------------------------------------------------");
 
-        console.log("\n--- Estado final de los 9 usuarios de demostración ---");
+        console.log("\n--- Estado final de los usuarios de demostración ---");
         const tableData = result.usersSummary.map((u) => ({
             "Nº": u.demoNumber,
             Usuario: u.name,
