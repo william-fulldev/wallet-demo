@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Movement } from "../api/types";
-import { movementSign, movementTitle } from "./movements";
+import { movementReference, movementSign, movementSubtitle, movementTitle } from "./movements";
 
 function makeMovement(overrides: Partial<Movement>): Movement {
     return {
@@ -107,5 +107,81 @@ describe("movementTitle", () => {
         expect(movementTitle(makeMovement({ type: "deposit" }))).toBe("Ingreso");
         expect(movementTitle(makeMovement({ type: "exchange_out" }))).toBe("Cambio · salida");
         expect(movementTitle(makeMovement({ type: "exchange_in" }))).toBe("Cambio · entrada");
+    });
+});
+
+describe("movementSubtitle", () => {
+    const fixedDate = "2026-10-21T10:00:00.000Z";
+    const fakeFormat = () => "21 oct 2026, 12:00";
+
+    it("muestra nota y fecha en transferencias con nota", () => {
+        expect(
+            movementSubtitle(
+                makeMovement({ type: "transfer_in", note: "Cena de ayer", createdAt: fixedDate }),
+                fakeFormat,
+            ),
+        ).toBe("Cena de ayer · 21 oct 2026, 12:00");
+
+        expect(
+            movementSubtitle(
+                makeMovement({ type: "transfer_out", note: "Gasolina viaje", createdAt: fixedDate }),
+                fakeFormat,
+            ),
+        ).toBe("Gasolina viaje · 21 oct 2026, 12:00");
+    });
+
+    it("muestra solo la fecha en transferencias sin nota", () => {
+        expect(
+            movementSubtitle(
+                makeMovement({ type: "transfer_in", note: null, createdAt: fixedDate }),
+                fakeFormat,
+            ),
+        ).toBe("21 oct 2026, 12:00");
+
+        expect(
+            movementSubtitle(
+                makeMovement({ type: "transfer_out", note: null, createdAt: fixedDate }),
+                fakeFormat,
+            ),
+        ).toBe("21 oct 2026, 12:00");
+    });
+
+    it("muestra categoría y fecha en pagos con categoría", () => {
+        expect(
+            movementSubtitle(
+                makeMovement({
+                    type: "payment_out",
+                    merchant: { key: "spotify", name: "Spotify", category: "Música" },
+                    createdAt: fixedDate,
+                }),
+                fakeFormat,
+            ),
+        ).toBe("Música · 21 oct 2026, 12:00");
+    });
+
+    it("muestra solo la fecha en ingresos, cambios e inversiones", () => {
+        expect(movementSubtitle(makeMovement({ type: "deposit", createdAt: fixedDate }), fakeFormat)).toBe(
+            "21 oct 2026, 12:00",
+        );
+        expect(movementSubtitle(makeMovement({ type: "exchange_out", createdAt: fixedDate }), fakeFormat)).toBe(
+            "21 oct 2026, 12:00",
+        );
+        expect(movementSubtitle(makeMovement({ type: "investment_buy", createdAt: fixedDate }), fakeFormat)).toBe(
+            "21 oct 2026, 12:00",
+        );
+    });
+});
+
+describe("movementReference", () => {
+    it("devuelve los últimos 8 caracteres del transferId si existe", () => {
+        expect(movementReference({ id: "1234567890abcdef", transferId: "transfer-12345678" })).toBe("12345678");
+    });
+
+    it("devuelve los últimos 8 caracteres del id si transferId no existe", () => {
+        expect(movementReference({ id: "6716bc2696b9f2e3410a0001", transferId: null })).toBe("3410a0001".slice(-8));
+    });
+
+    it("devuelve el id completo si tiene 8 caracteres o menos", () => {
+        expect(movementReference({ id: "m1", transferId: null })).toBe("m1");
     });
 });

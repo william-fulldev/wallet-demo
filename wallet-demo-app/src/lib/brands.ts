@@ -2,6 +2,7 @@ import {
     siApple,
     siBitcoin,
     siGoogle,
+    siMcdonalds,
     siNetflix,
     siSpotify,
     siStarbucks,
@@ -26,7 +27,7 @@ type CatalogEntry = {
     fallbackText?: string;
 };
 
-// Simple Icons incluye Netflix, Spotify, Starbucks, Zara, Uber, Apple, Bitcoin, Google y Tesla.
+// Simple Icons incluye Netflix, Spotify, Starbucks, Zara, Uber, Apple, McDonald's, Bitcoin, Google y Tesla.
 // Amazon y Microsoft no están en el paquete por motivos de marca registrada; se resuelven con respaldo.
 const BRAND_CATALOG: Record<string, CatalogEntry> = {
     netflix: {
@@ -64,6 +65,26 @@ const BRAND_CATALOG: Record<string, CatalogEntry> = {
         name: "Apple",
         path: siApple.path,
         hex: "000000",
+    },
+    mcdonalds: {
+        name: "McDonald's",
+        path: siMcdonalds.path,
+        hex: siMcdonalds.hex,
+    },
+    macdonals: {
+        name: "McDonald's",
+        path: siMcdonalds.path,
+        hex: siMcdonalds.hex,
+    },
+    macdonal: {
+        name: "McDonald's",
+        path: siMcdonalds.path,
+        hex: siMcdonalds.hex,
+    },
+    macdonalds: {
+        name: "McDonald's",
+        path: siMcdonalds.path,
+        hex: siMcdonalds.hex,
     },
     btc: {
         name: "Bitcoin",

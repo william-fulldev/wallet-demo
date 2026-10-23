@@ -456,6 +456,36 @@ ion-content {
 
 .activity-row:first-child { border-top: 0; }
 
+.activity-row--interactive {
+    padding: 0;
+    display: block;
+}
+
+.activity-row__btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    background: transparent;
+    border: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: background 0.15s ease;
+}
+
+.activity-row__btn:focus-visible {
+    outline: 2px solid var(--w-accent);
+    outline-offset: 2px;
+}
+
+.activity-row__btn:active {
+    background: rgba(255, 255, 255, 0.06);
+}
+
 .activity-icon {
     width: 40px;
     height: 40px;
@@ -464,11 +494,28 @@ ion-content {
     place-items: center;
     background: rgba(255, 255, 255, 0.1);
     font-size: 18px;
+    flex-shrink: 0;
+}
+
+.activity-icon--large {
+    width: 56px;
+    height: 56px;
+    font-size: 26px;
 }
 
 .activity-icon--in { color: var(--w-accent); }
 .activity-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.activity-text small { color: var(--w-text-dim); }
+.activity-text strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.activity-text small {
+    color: var(--w-text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .activity-amount { font-weight: 600; font-variant-numeric: tabular-nums; }
 .activity-amount--in { color: var(--w-accent); }
 
@@ -1621,3 +1668,118 @@ ion-card {
     font-weight: 600;
 }
 
+
+/* ===== Modal detalle de movimiento ===== */
+.movement-detail-modal {
+    --background: rgba(18, 56, 43, 0.96);
+    --border-radius: 20px 20px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .movement-detail-modal {
+        --transition: none;
+        --animation: none;
+    }
+}
+
+.movement-detail__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px 0 24px;
+}
+
+.movement-detail__icon-wrap {
+    margin-bottom: 12px;
+    display: grid;
+    place-items: center;
+}
+
+.movement-detail__title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--w-text);
+}
+
+.movement-detail__amount {
+    margin: 6px 0 2px;
+    font-size: 1.9rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--w-text);
+}
+
+.movement-detail__amount--in {
+    color: var(--w-accent);
+}
+
+.movement-detail__date {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--w-text-dim);
+}
+
+.movement-detail__card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.movement-detail__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.9rem;
+}
+
+.movement-detail__row .muted {
+    color: var(--w-text-dim);
+}
+
+.movement-detail__counterparty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.movement-detail__status {
+    color: var(--w-accent);
+    font-weight: 600;
+}
+
+.movement-detail__ref {
+    font-family: monospace;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.movement-detail__note-block {
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.movement-detail__note-label {
+    display: block;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--w-text-dim);
+    margin-bottom: 6px;
+}
+
+.movement-detail__note-text {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--w-text);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}

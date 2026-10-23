@@ -1,8 +1,9 @@
 import { IonSpinner } from "@ionic/react";
 import { useState } from "react";
 import { useMovements } from "../api/queries";
-import { CURRENCIES, type Currency } from "../api/types";
+import { CURRENCIES, type Currency, type Movement } from "../api/types";
 import { ActivityRow } from "../components/ActivityRow";
+import { MovementDetailModal } from "../components/MovementDetailModal";
 import { PageHeader } from "../components/PageHeader";
 import { Screen } from "../components/Screen";
 
@@ -12,6 +13,7 @@ const FILTERS: Filter[] = ["ALL", ...CURRENCIES];
 
 const MovementsPage: React.FC = () => {
     const [filter, setFilter] = useState<Filter>("ALL");
+    const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
     const query = useMovements(filter === "ALL" ? undefined : filter);
 
     // Cada página trae su lista; las uno en una sola.
@@ -56,7 +58,12 @@ const MovementsPage: React.FC = () => {
 
                 <ul className="activity">
                     {movements.map((movement) => (
-                        <ActivityRow key={movement.id} movement={movement} showBalance />
+                        <ActivityRow
+                            key={movement.id}
+                            movement={movement}
+                            showBalance
+                            onSelect={(m) => setSelectedMovement({ ...m })}
+                        />
                     ))}
                 </ul>
 
@@ -71,6 +78,12 @@ const MovementsPage: React.FC = () => {
                     </button>
                 )}
             </section>
+
+            <MovementDetailModal
+                isOpen={!!selectedMovement}
+                movement={selectedMovement}
+                onClose={() => setSelectedMovement(null)}
+            />
         </Screen>
     );
 };

@@ -1,4 +1,5 @@
 import type { Counterparty, MovementAsset, MovementMerchant, MovementType } from "../api/types";
+import { formatDateTime } from "./dates";
 
 const LABELS: Record<MovementType, string> = {
     deposit: "Ingreso",
@@ -39,6 +40,37 @@ export function movementTitle(
         return movement.asset?.name ? `Venta de ${movement.asset.name}` : LABELS.investment_sell;
     }
     return movementLabel(movement.type);
+}
+
+// Subtítulo con nota en transferencias, categoría en comercios o la fecha formateada.
+export function movementSubtitle(
+    movement: {
+        type: MovementType;
+        createdAt: string;
+        note?: string | null;
+        merchant?: MovementMerchant | null;
+    },
+    formatDate: (iso: string) => string = formatDateTime,
+): string {
+    const formattedDate = formatDate(movement.createdAt);
+    if ((movement.type === "transfer_in" || movement.type === "transfer_out") && movement.note) {
+        return `${movement.note} · ${formattedDate}`;
+    }
+    if (movement.type === "payment_out" && movement.merchant?.category) {
+        return `${movement.merchant.category} · ${formattedDate}`;
+    }
+    return formattedDate;
+}
+
+// Referencia del movimiento: los últimos 8 caracteres de transferId o del propio id.
+export function movementReference(
+    movement: {
+        id: string;
+        transferId?: string | null;
+    },
+): string {
+    const raw = movement.transferId || movement.id;
+    return raw.length > 8 ? raw.slice(-8) : raw;
 }
 
 // El importe es siempre positivo; el tipo marca el sentido.

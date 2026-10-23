@@ -9,6 +9,7 @@ describe("resolveBrand", () => {
         "zara",
         "uber",
         "apple",
+        "mcdonalds",
         "BTC",
         "AAPL",
         "GOOGL",
@@ -43,8 +44,18 @@ describe("resolveBrand", () => {
         },
     );
 
+    it("resuelve las variaciones y alias de McDonald's con el mismo icono", () => {
+        const canonical = resolveBrand("mcdonalds");
+        expect(canonical.name).toBe("McDonald's");
+        expect(canonical.hex).toBe("FBC817");
+        expect(resolveBrand("macdonal").path).toBe(canonical.path);
+        expect(resolveBrand("macdonals").path).toBe(canonical.path);
+        expect(resolveBrand("macdonalds").path).toBe(canonical.path);
+    });
+
     it("es insensible a mayúsculas y espacios en las claves", () => {
         expect(resolveBrand("  NETFLIX ").path).toBe(resolveBrand("netflix").path);
+        expect(resolveBrand("  MCDONALDS ").path).toBe(resolveBrand("mcdonalds").path);
         expect(resolveBrand("btc").path).toBe(resolveBrand("BTC").path);
         expect(resolveBrand("msft").fallbackText).toBe("MSFT");
     });

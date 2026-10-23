@@ -50,6 +50,31 @@ describe("toPublicMovement", () => {
         expect(result.asset).toBeNull();
     });
 
+    it("resuelve McDonald's correctamente a partir de merchantKey mcdonalds y alias", () => {
+        const rawMovement = {
+            id: "67167a80b8529369911e3899",
+            currency: "EUR",
+            type: "payment_out",
+            amountCents: 950,
+            balanceAfterCents: 49050,
+            createdAt: new Date("2026-10-22T00:01:30.000Z"),
+            merchantKey: "mcdonalds",
+            asset: undefined,
+        };
+
+        const result = toPublicMovement(rawMovement);
+
+        expect(result.merchant).toEqual({
+            key: "mcdonalds",
+            name: "McDonald's",
+            category: "Restauración",
+        });
+
+        // Verificamos alias macdonal
+        const aliasResult = toPublicMovement({ ...rawMovement, merchantKey: "macdonal" });
+        expect(aliasResult.merchant?.name).toBe("McDonald's");
+    });
+
     it("expone asset correctamente en un apunte de tipo investment_sell", () => {
         const rawMovement = {
             id: "67167a80b8529369911e3895",

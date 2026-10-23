@@ -117,6 +117,39 @@ describe("POST /api/transfers", () => {
         expect(await getMovements(ana)).toHaveLength(2);
     });
 
+    it("tras un envío con nota, la lista de movimientos del receptor trae un transfer_in con counterparty igual al nombre del remitente y la nota; sin nota, note es null; y la contraparte nunca incluye el correo", async () => {
+        const remitente = await createTestUser("Remitente");
+        const receptor = await createTestUser("Receptor");
+        await fund(remitente, "EUR", 10_000);
+        const contactId = await addContactFor(remitente, receptor);
+
+        // Envío con nota
+        await send(remitente, contactId, { currency: "EUR", amountCents: 1_000, note: "Alquiler mensual" });
+
+        // Envío sin nota
+        await send(remitente, contactId, { currency: "EUR", amountCents: 500 });
+
+        const receptorMovements = await getMovements(receptor);
+        expect(receptorMovements).toHaveLength(2);
+
+        const conNota = receptorMovements.find((m) => m.amountCents === 1_000);
+        const sinNota = receptorMovements.find((m) => m.amountCents === 500);
+
+        expect(conNota).toMatchObject({
+            type: "transfer_in",
+            note: "Alquiler mensual",
+            counterparty: { name: "Remitente" },
+        });
+        expect(conNota?.counterparty).not.toHaveProperty("email");
+
+        expect(sinNota).toMatchObject({
+            type: "transfer_in",
+            note: null,
+            counterparty: { name: "Remitente" },
+        });
+        expect(sinNota?.counterparty).not.toHaveProperty("email");
+    });
+
     it("rechaza reutilizar una clave con datos distintos", async () => {
         const ana = await createTestUser("Ana");
         const beto = await createTestUser("Beto");

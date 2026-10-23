@@ -17,12 +17,13 @@ import {
     useMarketAssets,
     useMovements,
 } from "../api/queries";
-import type { Currency, MarketAsset } from "../api/types";
+import type { Currency, MarketAsset, Movement } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { ActivityRow } from "../components/ActivityRow";
 import { Avatar } from "../components/Avatar";
 import { BuyInvestmentModal } from "../components/BuyInvestmentModal";
 import { MarketCard } from "../components/MarketCard";
+import { MovementDetailModal } from "../components/MovementDetailModal";
 import { PortfolioCard } from "../components/PortfolioCard";
 import { QuickTransfer } from "../components/QuickTransfer";
 import { Screen } from "../components/Screen";
@@ -88,6 +89,9 @@ const HomePage: React.FC = () => {
     const [selectedAsset, setSelectedAsset] = useState<MarketAsset | null>(null);
     const [investmentModalMode, setInvestmentModalMode] = useState<"buy" | "sell">("buy");
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+
+    // Estado del modal de detalle de movimiento
+    const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
 
     useEffect(() => {
         if (isSearchOpen) {
@@ -297,7 +301,11 @@ const HomePage: React.FC = () => {
 
                 <ul className="activity">
                     {recent.map((movement) => (
-                        <ActivityRow key={movement.id} movement={movement} />
+                        <ActivityRow
+                            key={movement.id}
+                            movement={movement}
+                            onSelect={(m) => setSelectedMovement({ ...m })}
+                        />
                     ))}
                 </ul>
             </section>
@@ -333,6 +341,13 @@ const HomePage: React.FC = () => {
                     setIsBuyModalOpen(false);
                     setSelectedAsset(null);
                 }}
+            />
+
+            {/* Modal de detalle del movimiento */}
+            <MovementDetailModal
+                isOpen={!!selectedMovement}
+                movement={selectedMovement}
+                onClose={() => setSelectedMovement(null)}
             />
 
             <IonToast

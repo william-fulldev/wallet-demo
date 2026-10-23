@@ -18,13 +18,13 @@ import {
 // 8 gastos en comercios de ejemplo (uno por comercio y un segundo en Starbucks)
 export const DEMO_PAYMENTS = [
     { key: "netflix", amountCents: 1299 },
-    { key: "spotify", amountCents: 1099 },
-    { key: "starbucks", amountCents: 485 },
-    { key: "zara", amountCents: 4995 },
-    { key: "amazon", amountCents: 2740 },
     { key: "uber", amountCents: 830 },
+    { key: "amazon", amountCents: 2740 },
+    { key: "zara", amountCents: 4995 },
+    { key: "spotify", amountCents: 1099 },
     { key: "apple", amountCents: 299 },
     { key: "starbucks", amountCents: 485 },
+    { key: "mcdonalds", amountCents: 950 },
 ] as const;
 
 // Suma total calculada dinámicamente a partir del catálogo de gastos (hoy 12_232 céntimos).
